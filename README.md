@@ -54,7 +54,7 @@ G = lptml.fit(x_train, y_train, u, l, t)
 
 ### Parallel version
 
-For our experiments, we used [Amazon EMR](https://aws.amazon.com/emr/) but there is no reason why this shouldn't work in other environments. In general, it should run in any environment supported by mrjob with some modifications.
+For our experiments, we used [Amazon EMR](https://aws.amazon.com/emr/) but there is no reason why this shouldn't work in other environments. In general, it should run in any environment supported by mrjob with some modifications (see mrjob's documentation for more details).
 
 To run the code, the following information has to be provided:
 
