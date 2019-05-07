@@ -54,6 +54,16 @@ G = lptml.fit(x_train, y_train, u, l, t)
 
 ### Parallel version
 
+The MapReduce job consists of one map and one reduce function. Each line of the input consists of a pair of points and a value that indicates if the points are similar or dissimilar.The input data $X = S \cup D$ is divided into $X_{train}$ and $X_{validate}$ sub sets. 
+
+First, $X_{train}$ is partitioned into pieces. Due to the potentially large size of the input, the map function allows some flexibility in the way the data is partitioned according to the values of some parameters $p$ and $k$. Specifically, $p$ corresponds to the expected fraction of constraints in $X_{train}$ that is assigned to any of $k$ partitions. If $p=1$ then this corresponds to making $k$ copies of the input.
+
+All pieces are processed by the reduce function in parallel using any of the available machines. The reduce function applies \LPTML to the current piece of input in order to learn a matrix $G$. All reduce functions have access to the same $X_{validate}$, which is used to evaluate $G$. The evaluation consists of counting the number of violated constraints in $X_{validate}$ when applying $G$. Finally, the reducer function returns the number of violated constraints and $G$ as a (key, value) pair and the calling program simply keeps the transformation matrix with the lowest number of violations.
+
+The parallel version of \LPTML was implemented using the mrjob \cite{mrjob-docs} package. Amazon provides several types of machines with different processor and memory configurations. For these experiments, we used instances of type \emph{m4.xlarge}, AMI 5.20.0 and configured with Hadoop. OS and Python library dependencies are installed during bootstrap. 
+
+Because we provision a new cluster of servers for each experiment there is some time overhead before learning begins. Booting up the servers and installing all necessary dependencies requires on average 16 minutes. This overhead can be avoided by changing some configurations in order to reuse an already running cluster.
+
 For our experiments, we used [Amazon EMR](https://aws.amazon.com/emr/) but there is no reason why this shouldn't work in other environments. In general, it should run in any environment supported by mrjob with some modifications (see mrjob's documentation for more details).
 
 To run the code, the following information has to be provided:
