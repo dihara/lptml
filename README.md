@@ -6,7 +6,8 @@ An implementation of an LP-type algorithm for metric learning introduced in "[Le
 
 * [Getting Started](#getting-started)
 * [Usage](#usage)
-  * [Learning a Metric](#learning-a-metric)
+  * [Learning a metric from labels](#learning-a-metric-from-labels)
+  * [Learning a metric from similarity and disimilarity constraints](#learning-a-metric-from-similarity-and-disimilarity-constraints)  
   * [Parallel version](parallel-version)
 * [Authors](#authors)
 * [License](#license)
@@ -102,7 +103,7 @@ The number of pieces in which to map the input is controlled by lptmlCopies. Eac
 
 ## Authors
 * [Diego Ihara](https://dihara2.people.uic.edu/)
-* Neshat Mohammadi
+* [Neshat Mohammadi]
 * [Anastasios Sidiropoulos](http://sidiropoulos.org)
 
 ## License
