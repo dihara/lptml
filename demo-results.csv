@@ -1,0 +1,7 @@
+# Description of the experiments output
+"experiment description", "avg euclidean accuracy", "avg lptml accuracy", "std euclidean accuracy", "std lptml accuracy", "avg euclidean precision", "avg lptml precision", "std euclidean precision", "std lptml precision", "avg euclidean recall", "avg lptml recall", "std euclidean recall", "std lptml recall", "avg euclidean f1-score", "avg lptml f1-score", "std euclidean f1-score", "std lptml f1-score", "avg # violated constraints before lptml on training set", "std # violated constraints before lptml on training set", "avg # violated constraints before lptml on testing set", "std # violated constraints before lptml on training set", "avg running time", "std running time"
+Example:
+This line is the result of running the following configuration: 100 iterations of lptml on the Wine data set with 0.1 fraction of labels perturbed. The values correspond to 10 executions of the experiment.
+"10% noise WINE to 2 t=100","0.71","0.59","0.04","0.14","0.69","0.57","0.03","0.14","0.69","0.57","0.03","0.13","0.68","0.56","0.03","0.14","3296.1","9.64","1398.3","41.84","3133.6","131.38","1402.1","54.22","6.48","0.44"
+
+===
