@@ -103,7 +103,7 @@ The number of pieces in which to map the input is controlled by lptmlCopies. Eac
 
 ## Authors
 * [Diego Ihara](https://dihara2.people.uic.edu/)
-* [Neshat Mohammadi]
+* Neshat Mohammadi
 * [Anastasios Sidiropoulos](http://sidiropoulos.org)
 
 ## License
