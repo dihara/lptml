@@ -1,4 +1,17 @@
-import builtins
+"""LP-type metric learning
+
+Requires CVXPY and numpy to be installed.
+
+This file can be imported as a module and contains the following
+functions to learn a metric:
+
+    * fit() - returns the matrix for the Mahalanobis distance
+    * transformer() -  returns the cholesky decomposition of a matrix
+
+Change the value of limit_constraints in order to restrict the number
+of constraints to be considered when counting violations.
+"""
+
 import numpy as np
 from cvxpy import *
 import math
@@ -19,8 +32,34 @@ initial_violation_count = 0
 rand_vector_r = []
 identity_d = []
 
-#
+
 def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
+    """Learn a Mahalanobis metric
+
+    Parameters
+    ----------
+    S : list
+        List of pairs of points that are similar i.e. have the same label
+    D : list
+        List of pairs of points that are disimilar
+    u : float
+        upper threshold for distance between similar points
+    l : float
+        lower threshold for distance between disimilar points
+    iterations : int
+        Number of times the input is sampled and a metric is learned
+    fixed_p : float, optional
+        Sample constraints with some fixed probability
+    initial_solution : list, optional
+        Initialize answer to this value. This serves to 'continue' the search
+        for a better solution from this point.
+
+    Returns
+    -------
+    list
+        Mahalanobis distance matrix
+    """
+
     global identity_d
     global max_best_solution_s
     global max_best_solution_d
@@ -84,8 +123,21 @@ def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
     return best_A
 
 
-# return the cholesky decomposition of A
 def transformer(A):
+    """Return the cholesky decomposition of A to be used to perform a
+    linear transformation
+
+    Parameters
+    ----------
+    A : np.array
+        Mahalanobis distance matrix
+
+    Returns
+    -------
+    np.array
+        The cholesky decomposition of the provided matrix
+    """
+
     global identity_d
     try:
         G = np.linalg.cholesky(A).T
@@ -95,8 +147,11 @@ def transformer(A):
     return G
 
 
-# LP-Type metric learning implementing the move-to-front and pivot heuristics
 def pivot_LPType(B, C, u, l, d, last_cost, use_last_cost, basis_A):
+    """LP-Type metric learning implementing the move-to-front and pivot heuristics
+
+    """
+
     calculate_basis_cost = not use_last_cost
     current_basis_cost = last_cost
 
@@ -160,9 +215,11 @@ def pivot_LPType(B, C, u, l, d, last_cost, use_last_cost, basis_A):
 
     return B, A
 
-# after we find a new solution, compute the basis
-# of this solution
+
 def compBasis(B, cost, u, l, d):
+    """compute the basis from a set of constraints
+    """
+
     # Try to remove one constraint at a time
     if len(B) > d**2:
         for t in itertools.combinations(B, len(B) - 1):
@@ -198,8 +255,10 @@ def get_permutation(B0, C):
     return C_prime
 
 
-# Compute the Mahalanobis distance between a and b
 def get_mahalanobis_distance(a, b, G):
+    """Compute the distance between points a and b
+    """
+
     point_i = np.matrix(a)
     point_j = np.matrix(b)
 
@@ -211,8 +270,10 @@ def get_mahalanobis_distance(a, b, G):
     return d
 
 
-# Count the number of violated constraints
 def count_violated_constraints(x, y, G, u, l):
+    """Count the number of violated constraints
+    """
+
     if G == []:
         return math.inf, math.inf
 
@@ -256,9 +317,11 @@ def count_violated_constraints(x, y, G, u, l):
     return d_count, s_count
 
 
-# when running the parallel version, the constraints to
-# check are in a file
 def count_violated_constraints_file(file, G, u, l):
+    """when running the parallel version, the constraints to
+       check are in a file
+    """
+
     if G == []:
         return math.inf
 
@@ -283,9 +346,11 @@ def count_violated_constraints_file(file, G, u, l):
     return d_count, s_count
 
 
-# count violated constraints when given the sets
-# S and D as input
 def count_violated_constraints_SD(S, D, G, u, l):
+    """count violated constraints when given the sets
+       S and D as input
+    """
+
     if G == []:
         return math.inf
 
@@ -307,8 +372,11 @@ def count_violated_constraints_SD(S, D, G, u, l):
     return d_count, s_count
 
 
-# Solve a small semi-definite program
 def semidefsolver(H, u, l):
+    """Solve a small semi-definite program.
+       Other SDP solvers can be used. See the cvxpy documentation.
+    """
+
     if len(H) == 0:
         return []
 
@@ -351,8 +419,11 @@ def semidefsolver(H, u, l):
 
     return A.value
 
-#cost function of the LP-type problem
+
 def w(A):
+    """cost function of the LP-type problem
+    """
+
     if A is None:
         return float("-inf")
     if len(A) == 0:
@@ -406,6 +477,7 @@ def preprocess(D, S):
 
     return H, n
 
+
 def get_dimension(D, S):
     if len(D) > 0:
         d = len(D[0][0])
@@ -414,23 +486,10 @@ def get_dimension(D, S):
 
     return d
 
-def sample_data(X, Y, p):
-    H_prime = []
-    n = builtins.min(math.ceil(len(X) * p), len(X))
 
-    for i in range(n):
-        p = np.random.randint(0, len(X))
-        q = np.random.randint(0, len(X))
-
-        if Y[p] == Y[q]:
-            H_prime.append([X[p], X[q], 'S'])
-        else:
-            H_prime.append([X[p], X[q], 'D'])
-
-    return H_prime
-
-# subsample equally from S and D
 def subsample(S, D, p, min_sample):
+    """subsample from S and D
+    """
     H_prime = []
     s_count = 0
     d_count = 0
@@ -454,8 +513,10 @@ def subsample(S, D, p, min_sample):
     return H_prime, s_count + d_count
 
 
-# The initial basis consists of one arbitrary similarity constraint
 def calculate_initial_basis(H):
+    """The initial basis consists of one arbitrary similarity constraint
+    """
+
     B0 = []
     for h in H:
         if h[2] == 'S':
@@ -466,6 +527,41 @@ def calculate_initial_basis(H):
 
 
 def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_solution=[], random_seed=-1):
+    """Learn a Mahalanobis metric
+
+    Parameters
+    ----------
+    x : list
+        List of points
+    y : list
+        Labels for each point
+    u : float
+        Upper threshold
+    l : float
+        Lower threshold
+    t : int
+        Number of iterations of lptml to perform
+    S : list, optional
+        List of pairs of points to be used as the set of similarity constraints
+    D : list, optional
+        List of pairs of points to be used as the set of disimilarity constraints
+    run_hadoop : bool, optional
+        Flag to indicate if mrjob is to be used to run lptml on a Hadoop
+        cluster (default False)
+    num_machines : int, optional
+        Number of machines to request for the Hadoop cluster
+    initial_solution : ndarray
+        Start with some initial solution (for example: A matrix from a previous
+        execution)
+    random_seed : int
+        Set random seed for permutations and sampling.
+
+    Returns
+    -------
+    ndarray
+        Distance matrix
+    """
+
     # how many data points are there?
     n = len(x)
     # get the number of features from the first data point
@@ -528,8 +624,6 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
 
         G = transformer(A)
     except:
-        print("This caused an error", A)
-
         #sometimes there is some error involving the solver
         G = np.identity(d)
 
@@ -594,12 +688,35 @@ def maximal_violation(constraints, skip, A, u, l):
     return constraints[worst_index], worst_value, worst_index
 
 
-# learn the metric using mrjob
-def mp_learn_metric(data, u, l, k, num_machines):
+def mp_learn_metric(data, u, l, t, num_machines):
+    """Learn the metric using mrjob
+
+
+    Parameters
+    ----------
+    data : list
+        List of triples where the first and second elements are points and the third
+        is either "S" or "D" depending on whether the pair is a similar or disimilar
+        constraint
+    u: float
+        Upper threshold
+    l: float
+        Lower threshold
+    t: int
+        Number of iterations
+    num_machines: int
+        Number of machines to launch for the cluster
+
+    Returns
+    -------
+    ndarray
+        Best distance matrix
+    """
+
     part_c = 10 #number of copies of each partition
     part_f = 0.1 #fraction of training constraints included in each partition
 
-    validate_fraction = 0.1
+    validate_fraction = 0.1 #fraction of data to use as validation set
 
     total_data_size = len(data)
     validate_size = round(total_data_size * validate_fraction)
@@ -633,7 +750,6 @@ def mp_learn_metric(data, u, l, k, num_machines):
                   ]
 
     mr_job = MRLPTML(args=parameters)
-    # mr_job.stdin = stdin
     print("args", parameters)
     with mr_job.make_runner() as runner:
         print("running")
@@ -649,8 +765,8 @@ def mp_learn_metric(data, u, l, k, num_machines):
         try:
             z_count = 0
             for key, value in mr_job.parse_output(runner.cat_output()):
-                print("key is", key)
-                print("value is", value)
+                # print("key is", key)
+                # print("value is", value)
 
                 if key < best:
                     z_count += 1
