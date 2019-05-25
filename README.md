@@ -87,7 +87,7 @@ When running the code there is the option of reusing an already configured clust
       - sudo pip-3.6 install -f https://download.mosek.com/stable/wheel/index.html Mosek
 ```
 
-The number of pieces in which to map the input is controlled by lptmlCopies. Each piece contains lptmlFraction of all constraints. The number of machines that will run the tasks is controlled by num_core_instances.
+The number of pieces in which to map the input is controlled by lptmlCopies. Each piece contains lptmlFraction of all constraints. The number of machines that will run the tasks is controlled by num_core_instances. These parameters are overwritten when the mrjob task is launched in the mp_learn_metric() function in lptml.py.
 
 ```
     cmdenv:
