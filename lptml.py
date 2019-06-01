@@ -10,6 +10,8 @@ functions to learn a metric:
 
 Change the value of limit_constraints in order to restrict the number
 of constraints to be considered when counting violations.
+
+This work was supported by the National Science Foundation under award CAREER 1453472, and grant CCF 1815145.
 """
 
 import numpy as np
