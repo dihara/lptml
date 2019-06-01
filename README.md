@@ -110,4 +110,4 @@ The number of pieces in which to map the input is controlled by lptmlCopies. Eac
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 ## Acknowledgments
-Supported by NSF under award CAREER 1453472, and grants CCF 1815145 and CCF1423230.
+This work was supported by the National Science Foundation under award CAREER 1453472, and grant CCF 1815145.
