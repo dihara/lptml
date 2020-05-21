@@ -1,6 +1,6 @@
 # LP-type Metric Learning (LPTML)
 
-An implementation of an LP-type algorithm for metric learning introduced in "[Learning Mahalanobis Metric Spaces via Geometric Approximation Algorithms](http://arxiv.org/)". 
+An implementation of an LP-type algorithm for metric learning introduced in "[Learning Mahalanobis Metric Spaces via Geometric Approximation Algorithms](https://arxiv.org/pdf/1905.09989.pdf)". 
 
 ## Table of Contents
 
@@ -104,6 +104,7 @@ The number of pieces in which to map the input is controlled by lptmlCopies. Eac
 ## Authors
 * [Diego Ihara](https://dihara2.people.uic.edu/)
 * Neshat Mohammadi
+* [Francesco Sgherzi](https://fsgher2.people.uic.edu/)
 * [Anastasios Sidiropoulos](http://sidiropoulos.org)
 
 ## License
