@@ -16,6 +16,7 @@ This work was supported by the National Science Foundation under award CAREER 14
 
 import numpy as np
 from cvxpy import *
+import mosek
 import math
 import random
 import itertools
@@ -411,8 +412,8 @@ def semidefsolver(H, u, l):
         # problem.solve(solver=MOSEK, verbose=True)
         # problem.solve(solver=SCS, use_indirect=True)
         # problem.solve(solver=SCS)
-        problem.solve(solver=MOSEK)
-    except:
+        problem.solve(solver=MOSEK, mosek_params={mosek.iparam.num_threads: 8})
+    except Exception as e:
         return []
 
     if problem.status != "optimal":

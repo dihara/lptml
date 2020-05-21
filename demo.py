@@ -12,6 +12,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 import pandas as pd
+from read_dataset import read_german_credit, read_image_segment, read_isolet, read_letters, read_mnist
 import scipy.io as sio
 
 run_mlwga = False
@@ -232,141 +233,88 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
                 wr = csv.writer(resultsfile, quoting=csv.QUOTE_ALL)
                 wr.writerow(final_results)
 
+if __name__ == "__main__":
+    loaded_datasets = []
+    # BEGIN EXPERIMENT LIST
+    # Parameters for all experiments
+    run_mlwga = True
+    filename = 'demo-results.csv'
+    train_size = 0.5
 
-# BEGIN EXPERIMENT LIST
-# Parameters for all experiments
-run_mlwga = True
-filename = 'demo-results.csv'
-train_size = 0.5
+    # Breast cancer dataset
+    bc = datasets.load_breast_cancer()
+    x_bc = bc.data
+    y_bc = bc.target
+    loaded_datasets.append((x_bc, y_bc, "breast_cancer"))
+    # Vehicle dataset
+    # MISSING FOR NOW
 
-# Load datasets
-# Wine
-wine = datasets.load_wine()
-x_wine = wine.data
-y_wine = wine.target
+    # German Credit dataset
+    x_gc, y_gc = read_german_credit("./datasets/german_credit/german_credit.tsv") #pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+    loaded_datasets.append((x_gc, y_gc, "german_credit"))
 
-# Iris
-iris = datasets.load_iris()
-x_iris = iris.data
-y_iris = iris.target
+    # Image segment dataset
+    x_is, y_is = read_image_segment("./datasets/image_segment/segmentation.data") #pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+    loaded_datasets.append((x_is, y_is, "image_segment"))
 
-#Synthetic data set
-mat_contents = sio.loadmat('./synthetic/xt.mat')
-x_synth = np.transpose(mat_contents['xt'])
+    # Isolet dataset
+    x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")
+    loaded_datasets.append((x_isolet, y_isolet, "isolet"))
 
-mat_contents = sio.loadmat('./synthetic/y.mat')
-y_synth = np.transpose(mat_contents['L'])
+    # Letters dataset
+    x_letters, y_letters = read_letters("./datasets/letters/letters.csv")
+    loaded_datasets.append((x_letters, y_letters, "letters"))
 
+    # MNIST dataset
+    x_mnist, y_mnist = read_mnist("./datasets/mnist/t10k-images-idx3-ubyte", "./datasets/mnist/t10k-labels-idx1-ubyte")
+    loaded_datasets.append((x_mnist, y_mnist, "mnist"))
 
-# Results presented in Figure 1
-# Average time as dimensionality increases
+    # Results presented in Figure 1
+    # Average time as dimensionality increases
 
-PCA_dim_by = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-lptml_iterations = [100, 500, 1000, 1500, 2000]
-repeat_experiment = 10
+    PCA_dim_by = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+    lptml_iterations = [100, 500, 1000, 1500, 2000]
+    repeat_experiment = 10
 
-for noise_fraction in [0]:
-    random_seed = np.random.random_integers(1000)
+    for x, y, dataset_name in loaded_datasets:
+        print(f"Running test for -> {dataset_name}")
+        for noise_fraction in [0]:
+            random_seed = np.random.random_integers(1000)
 
-    result_header = str(noise_fraction) + " noise WINE"
-    feat_count = 13
-    perform_experiment(x_wine, y_wine, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header, filename, lptml_iterations, [],
-               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
+            result_header = str(noise_fraction) + " noise WINE"
+            feat_count = len(pd.Series(y).unique())
+            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+                               filename, lptml_iterations, [],
+                               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
 
+        # Results presented in Figure 2
+        # Fraction of constraints violated and Accuracy as the number of iterations increases
+        PCA_dim_by = [9, 5, 1]
 
-# Results presented in Figure 2
-# Fraction of constraints violated and Accuracy as the number of iterations increases
-PCA_dim_by = [9, 5, 1]
+        lptml_iterations = [10, 20, 30, 40, 50]
+        repeat_experiment = 50
 
-lptml_iterations = [10,20,30,40,50]
-repeat_experiment = 50
+        for noise_fraction in [0]:
+            random_seed = np.random.random_integers(1000)
 
-for noise_fraction in [0]:
-    random_seed = np.random.random_integers(1000)
+            result_header = str(noise_fraction) + f" noise {dataset_name}"
+            feat_count = len(pd.Series(y).unique())
+            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+                               filename, lptml_iterations, [],
+                               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
 
-    result_header = str(noise_fraction) + " noise WINE"
-    feat_count = 13
-    perform_experiment(x_wine, y_wine, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header, filename, lptml_iterations, [],
-               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
+        # Figure 3
+        # Average accuracy as the fraction of label perturbation increases
 
-# Figure 3
-# Average accuracy as the fraction of label perturbation increases
+        PCA_dim_by = [0]
+        lptml_iterations = [2000]
+        repeat_experiment = 10
 
-PCA_dim_by = [0]
-lptml_iterations = [2000]
-repeat_experiment = 10
+        for noise_fraction in [0, 0.1, 0.2, 0.3]:
+            random_seed = np.random.random_integers(1000)
 
-for noise_fraction in [0, 0.1, 0.2, 0.3]:
-    random_seed = np.random.random_integers(1000)
-
-    result_header = str(noise_fraction) + "% noise SYNTH"
-    feat_count = 2
-    perform_experiment(x_synth, y_synth, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header, filename, lptml_iterations, [],
-                       [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
-
-    result_header = str(noise_fraction) + "% noise IRIS"
-    feat_count = 4
-    perform_experiment(x_iris, y_iris, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header, filename, lptml_iterations, [],
-                       [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
-
-    result_header = str(noise_fraction) + "% noise WINE"
-    feat_count = 13
-    perform_experiment(x_wine, y_wine, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header, filename, lptml_iterations, [],
-                       [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
-
-
-
-# Figure 4
-# Running time for parallel LPTML on an increasing number of machines
-lptml_iterations = [100]
-
-for num_mach in [1, 2, 4, 8]:
-    result_header = str(num_mach) + "machines WINE"
-    perform_experiment(x_wine, y_wine, train_size, feat_count, do_PCA_to, repeat_experiment, result_header, filename, lptml_iterations, [], [], 0, 0, run_hadoop=True, num_machines=num_mach)
-
-
-# IONOSPHERE
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/ionosphere/ionosphere.data"
-names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
-         '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27',
-         '28', '29', '30', '31', '32', '33', '34', 'cla']
-data = pd.read_csv(url, names=names)
-data_columns = names[:-1]
-x_ionosphere = data[data_columns].values
-y_ionosphere = data["cla"].values.flatten()
-
-# z = 10 #from 34
-# pca = PCA(n_components=z)
-# x = pca.fit(x).transform(x)
-
-feat_count = 34
-do_PCA_to = 34
-
-#     # print(y)
-for num_mach in [10, 9, 8, 7, 6 , 5, 4, 3, 2]:
-    result_header = str(num_mach) + " machines IONOSPHERE/k:" + str(lptml_iterations)
-    perform_experiment(x_ionosphere, y_ionosphere, train_size, feat_count, do_PCA_to, repeat_experiment, result_header, filename, lptml_iterations, [], [], 0, 0, num_machines=num_mach, run_hadoop=True)
-
-
-# SMALL SOYBEAN
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/soybean/soybean-small.data"
-names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
-         '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27',
-         '28', '29', '30', '31', '32', '33', '34', '35', 'class']
-data = pd.read_csv(url, dtype={'1': np.float64, '2': np.float64, '3': np.float64, '4': np.float64, '5': np.float64,
-                               '6': np.float64, '7': np.float64, '8': np.float64, '9': np.float64, '10': np.float64,
-                               '11': np.float64, '12': np.float64, '13': np.float64, '14': np.float64, '15': np.float64,
-                               '16': np.float64, '17': np.float64, '18': np.float64, '19': np.float64, '20': np.float64,
-                               '21': np.float64, '22': np.float64, '23': np.float64, '24': np.float64, '25': np.float64,
-                               '26': np.float64, '27': np.float64, '28': np.float64, '29': np.float64, '30': np.float64,
-                               '31': np.float64, '32': np.float64, '33': np.float64, '34': np.float64, '35': np.float64},names=names)
-data_columns = names[:-1]
-x = np.array(data[data_columns].values.tolist())
-y = np.array(data["class"].values.flatten())
-
-feat_count = 35
-do_PCA_to = 35
-
-for num_mach in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-    result_header = str(num_mach) + " machines " + "SOYBEAN/k:" + str(lptml_iterations)
-    perform_experiment(x, y, train_size, feat_count, do_PCA_to, repeat_experiment, result_header, filename, lptml_iterations, [], [], 0, 0, run_hadoop=True, num_machines=num_mach)
+            result_header = str(noise_fraction) + f"% noise {dataset_name}"
+            feat_count = len(pd.Series(y).unique())
+            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+                               filename, lptml_iterations, [],
+                               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
