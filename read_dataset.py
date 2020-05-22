@@ -106,5 +106,6 @@ def read_vehicle(path):
     df = pd.read_csv(path, header=None)
     x  = df.loc[:, df.columns != 18]
     y  = df[18]
+
     return x.to_numpy(), y.to_numpy()
 

@@ -19,7 +19,7 @@ import scipy.io as sio
 
 run_mlwga = False
 previous_solution = []
-
+done_experiments = []
 
 def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iterations, S, D, ut, lt, run_hadoop=False,
                            num_machines=10, label_noise=0, rand_state=-1):
@@ -44,12 +44,13 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
             nss = ShuffleSplit(test_size=label_noise / 100, n_splits=1, random_state=rand_state)
             for no_noise, yes_noise in nss.split(y_train):
                 for i in yes_noise:
-                    y_train[i] = np.random.choice(np.setdiff1d(all_labels, y_train[i]), 1);
+                    y_train[i] = np.random.choice(np.setdiff1d(all_labels, y_train[i]), 1)
 
         np.random.seed(None)
 
         for reduce_dim_by in PCA_dim_by:
             dimensions = d - reduce_dim_by
+            print(f"Final dimension for pca {dimensions}")
             if reduce_dim_by > 0:
                 pca = PCA(n_components=dimensions)
                 x_pca_train = pca.fit(x_train).transform(x_train)
@@ -129,10 +130,10 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
                     # print("continue")
                     raise
 
-                neigh_lptml = KNeighborsClassifier(n_neighbors=4, metric="euclidean")
+                neigh_lptml = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
                 neigh_lptml.fit(x_lptml_train, np.ravel(y_train))
 
-                neigh = KNeighborsClassifier(n_neighbors=4, metric="euclidean")
+                neigh = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
                 neigh.fit(x_pca_train, np.ravel(y_train))
 
                 y_prediction = neigh.predict(x_pca_test)
@@ -173,7 +174,7 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
     results_dict = split_pca_learn_metric(x, y, PCA_dim_by, repeat_experiment, number_of_folds, lptml_iterations, S, D,
                                           ut, lt, run_hadoop=run_hadoop, num_machines=num_machines,
                                           label_noise=label_noise, rand_state=rand_state)
-
+    print(results_dict)
     for pca in PCA_dim_by:
         for ite in lptml_iterations:
             final_results = ["", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -240,7 +241,9 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             final_results[25] = np.round(np.average(results[:, 20]), 3)
             final_results[26] = np.round(np.std(results[:, 20]), 3)
 
-            with open(filename, 'a', newline='') as resultsfile:
+            with open( "k=5" + filename, 'a+', newline='') as resultsfile:
+                print("Printing fiinal results!")
+                print(final_results)
                 wr = csv.writer(resultsfile, quoting=csv.QUOTE_ALL)
                 wr.writerow(final_results)
 
@@ -287,12 +290,13 @@ if __name__ == "__main__":
     # Results presented in Figure 1
     # Average time as dimensionality increases
 
-    PCA_dim_by = [8, 5, 1]
-    lptml_iterations = [50]
+    lptml_iterations = [1]
     repeat_experiment = 5
 
     for x, y, dataset_name in tqdm(loaded_datasets, desc="Datasets"):
-
+        if dataset_name in done_experiments:
+            continue
+        PCA_dim_by = [x.shape[1] - 2, x.shape[1] - 4]
         print(
             f"Running test for -> {dataset_name}\n\tShape -> {x.shape}\n\tReducing dimensions by -> {PCA_dim_by}\n\tRepeat Experiment -> {repeat_experiment} times\n\tLPTML iterations -> {lptml_iterations}")
 
@@ -308,17 +312,13 @@ if __name__ == "__main__":
 
         # Figure 3
         # Average accuracy as the fraction of label perturbation increases
+        # PCA_dim_by = [10]
+        # for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
+        #     random_seed = np.random.random_integers(1000)
 
-        PCA_dim_by = [0]
-        lptml_iterations = [50]
-        repeat_experiment = 5
-
-        for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
-            random_seed = np.random.random_integers(1000)
-
-            result_header = str(noise_fraction) + f"% noise {dataset_name}"
-            print(f"\n\tHeader -> {result_header}")
-            feat_count = x.shape[1]
-            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
-                               filename, lptml_iterations, [],
-                               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
+        #     result_header = str(noise_fraction) + f"% noise {dataset_name}"
+        #     print(f"\n\tHeader -> {result_header}")
+        #     feat_count = x.shape[1]
+        #     perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+        #                        filename, lptml_iterations, [],
+        #                        [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
