@@ -81,7 +81,7 @@ def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
 
     viol_d, viol_s = count_violated_constraints_SD(S, D, transformer(best_A), u, l)
     print("##Initial violated constraints: d ", viol_d, "s", viol_s)
-    print("t=", iterations)
+    print("t =", iterations)
     max_best_solution_d = viol_d
     max_best_solution_s = viol_s
     initial_violation_count = max_best_solution_d + max_best_solution_s #saving this value for reference
@@ -592,11 +592,11 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
         d = len(x[0])
 
         randomized_indexes = range(0, len(all_pairs))
-        print("I have", len(randomized_indexes), "constraints")
+        #print("I have", len(randomized_indexes), "constraints")
 
         if run_hadoop:
             data = []
-            print("I have", len(randomized_indexes), "lines of data")
+            #print("I have", len(randomized_indexes), "lines of data")
             for i in randomized_indexes:
                 if y[all_pairs[i][0]] == y[all_pairs[i][1]]:
                     data.append([x[all_pairs[i][0]].tolist(), x[all_pairs[i][1]].tolist(), 'S'])
@@ -612,7 +612,7 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
                 if (len(similar_pairs_S) > limit_constraints) and (len(dissimilar_pairs_D) > limit_constraints):
                     break
 
-    print("number of constraints: d", len(dissimilar_pairs_D),  "s", len(similar_pairs_S))
+    print("number of constraints: d = ", len(dissimilar_pairs_D),  " s = ", len(similar_pairs_S))
 
     np.random.seed(None)
     if run_hadoop:

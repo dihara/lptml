@@ -92,3 +92,19 @@ def read_mnist(x_path, y_path):
     x = read_x_mnist(x_path).reshape((10000, 784))
     y = read_y_mnist(y_path)
     return x[:4000, :], y[:4000]
+
+def read_breast_cancer(path):
+    df = pd.read_csv(path)
+    df = df.loc[:, df.columns != 'id']
+    x  = df.loc[:, df.columns != 'class']
+    y  = df["class"]
+
+    return x.to_numpy(), y.to_numpy()
+
+
+def read_vehicle(path):
+    df = pd.read_csv(path, header=None)
+    x  = df.loc[:, df.columns != 18]
+    y  = df[18]
+    return x.to_numpy(), y.to_numpy()
+
