@@ -109,3 +109,38 @@ def read_vehicle(path):
 
     return x.to_numpy(), y.to_numpy()
 
+
+def load_datasets():
+    # loaded_datasets = []
+    # Breast cancer dataset
+    x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
+    yield x_bc, y_bc, "breast_cancer"
+
+    # Vehicle dataset
+    x_vehicle, y_vehicle = read_vehicle("./datasets/vehicle/xa.csv")
+    yield x_vehicle, y_vehicle, "vehicle"
+
+    # German Credit dataset
+    x_gc, y_gc = read_german_credit(
+        "./datasets/german_credit/german_credit.tsv")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+    yield x_gc, y_gc, "german_credit"
+
+    # Image segment dataset
+    x_is, y_is = read_image_segment(
+        "./datasets/image_segment/segmentation.data")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+    yield x_is, y_is, "image_segment"
+
+    # Isolet dataset
+    x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")
+    yield x_isolet, y_isolet, "isolet"
+
+    # Letters dataset
+    x_letters, y_letters = read_letters("./datasets/letters/letters.csv")
+    yield x_letters, y_letters, "letters"
+
+    # MNIST dataset
+    x_mnist, y_mnist = read_mnist("./datasets/mnist/t10k-images-idx3-ubyte", "./datasets/mnist/t10k-labels-idx1-ubyte")
+    yield x_mnist, y_mnist, "mnist"
+
+    #return loaded_datasets
+

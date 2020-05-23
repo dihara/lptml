@@ -13,8 +13,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 import pandas as pd
-from read_dataset import read_german_credit, read_image_segment, read_isolet, read_letters, read_mnist, \
-    read_breast_cancer, read_vehicle
+from read_dataset import load_datasets
 import scipy.io as sio
 
 run_mlwga = False
@@ -130,10 +129,10 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
                     # print("continue")
                     raise
 
-                neigh_lptml = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
+                neigh_lptml = KNeighborsClassifier(n_neighbors=10, metric="euclidean")
                 neigh_lptml.fit(x_lptml_train, np.ravel(y_train))
 
-                neigh = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
+                neigh = KNeighborsClassifier(n_neighbors=10, metric="euclidean")
                 neigh.fit(x_pca_train, np.ravel(y_train))
 
                 y_prediction = neigh.predict(x_pca_test)
@@ -256,69 +255,38 @@ if __name__ == "__main__":
     filename = 'demo-results.csv'
     train_size = 0.5
 
-    # Breast cancer dataset
-    x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
-    loaded_datasets.append((x_bc, y_bc, "breast_cancer"))
-
-    # Vehicle dataset
-    x_vehicle, y_vehicle = read_vehicle("./datasets/vehicle/xa.csv")
-    loaded_datasets.append((x_vehicle, y_vehicle, "vehicle"))
-
-    # German Credit dataset
-    x_gc, y_gc = read_german_credit(
-        "./datasets/german_credit/german_credit.tsv")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-    loaded_datasets.append((x_gc, y_gc, "german_credit"))
-
-    # Image segment dataset
-    x_is, y_is = read_image_segment(
-        "./datasets/image_segment/segmentation.data")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-    loaded_datasets.append((x_is, y_is, "image_segment"))
-
-    # Isolet dataset
-    x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")
-    loaded_datasets.append((x_isolet, y_isolet, "isolet"))
-
-    # Letters dataset
-    x_letters, y_letters = read_letters("./datasets/letters/letters.csv")
-    loaded_datasets.append((x_letters, y_letters, "letters"))
-
-    # MNIST dataset
-    x_mnist, y_mnist = read_mnist("./datasets/mnist/t10k-images-idx3-ubyte", "./datasets/mnist/t10k-labels-idx1-ubyte")
-    loaded_datasets.append((x_mnist, y_mnist, "mnist"))
 
 
     # Results presented in Figure 1
     # Average time as dimensionality increases
 
     lptml_iterations = [1]
-    repeat_experiment = 5
+    repeat_experiment = 10
 
-    for x, y, dataset_name in tqdm(loaded_datasets, desc="Datasets"):
+    for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets"):
         if dataset_name in done_experiments:
             continue
         PCA_dim_by = [x.shape[1] - 2, x.shape[1] - 4]
-        print(
-            f"Running test for -> {dataset_name}\n\tShape -> {x.shape}\n\tReducing dimensions by -> {PCA_dim_by}\n\tRepeat Experiment -> {repeat_experiment} times\n\tLPTML iterations -> {lptml_iterations}")
-
-        noise_fraction = 0
-        random_seed = np.random.random_integers(1000)
-
-        result_header = str(noise_fraction) + f" noise {dataset_name}"
-        print(f"\n\tHeader -> {result_header}")
-        feat_count = x.shape[1]
-        perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
-                            filename, lptml_iterations, [],
-                            [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
+        # print(
+        #     f"Running test for -> {dataset_name}\n\tShape -> {x.shape}\n\tReducing dimensions by -> {PCA_dim_by}\n\tRepeat Experiment -> {repeat_experiment} times\n\tLPTML iterations -> {lptml_iterations}")
+        #
+        # noise_fraction = 0
+        # random_seed = np.random.random_integers(1000)
+        #
+        # result_header = str(noise_fraction) + f" noise {dataset_name}"
+        # print(f"\n\tHeader -> {result_header}")
+        # feat_count = x.shape[1]
+        # perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+        #                     filename, lptml_iterations, [],
+        #                     [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
 
         # Figure 3
-        # Average accuracy as the fraction of label perturbation increases
-        # PCA_dim_by = [10]
-        # for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
-        #     random_seed = np.random.random_integers(1000)
+        for noise_fraction in tqdm([0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
+            random_seed = np.random.random_integers(1000)
 
-        #     result_header = str(noise_fraction) + f"% noise {dataset_name}"
-        #     print(f"\n\tHeader -> {result_header}")
-        #     feat_count = x.shape[1]
-        #     perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
-        #                        filename, lptml_iterations, [],
-        #                        [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
+            result_header = str(noise_fraction) + f"% noise {dataset_name}"
+            print(f"\n\tHeader -> {result_header}")
+            feat_count = x.shape[1]
+            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+                               filename, lptml_iterations, [],
+                               [], 0, 0, label_noise=noise_fraction, rand_state=random_seed)
