@@ -18,7 +18,7 @@ import scipy.io as sio
 
 run_mlwga = False
 previous_solution = []
-done_experiments = []
+done_experiments = ["isolet", "image_segment", "breast_cancer", "vehicle", "german_credit"]
 
 def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iterations, S, D, ut, lt, run_hadoop=False,
                            num_machines=10, label_noise=0, rand_state=-1):
@@ -129,10 +129,10 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
                     # print("continue")
                     raise
 
-                neigh_lptml = KNeighborsClassifier(n_neighbors=10, metric="euclidean")
+                neigh_lptml = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
                 neigh_lptml.fit(x_lptml_train, np.ravel(y_train))
 
-                neigh = KNeighborsClassifier(n_neighbors=10, metric="euclidean")
+                neigh = KNeighborsClassifier(n_neighbors=5, metric="euclidean")
                 neigh.fit(x_pca_train, np.ravel(y_train))
 
                 y_prediction = neigh.predict(x_pca_test)
@@ -241,7 +241,7 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             final_results[26] = np.round(np.std(results[:, 20]), 3)
 
             with open( "k=5" + filename, 'a+', newline='') as resultsfile:
-                print("Printing fiinal results!")
+                print("Printing final results!")
                 print(final_results)
                 wr = csv.writer(resultsfile, quoting=csv.QUOTE_ALL)
                 wr.writerow(final_results)
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     # Average time as dimensionality increases
 
     lptml_iterations = [1]
-    repeat_experiment = 10
+    repeat_experiment = 5
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets"):
         if dataset_name in done_experiments:
