@@ -14,15 +14,16 @@ from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
 
-    with open("results-other.csv", "w+") as f:
-        f.write(
-            "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
+    # with open("results-other.csv", "w+") as f:
+    #     f.write(
+    #         "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets", total=7):
-
+        if dataset_name not in ["mnist", "letters"]:
+            continue
         for MLConstructor in tqdm([RCA_Supervised, MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN], desc=f"Metric Learning Constructor", leave=False):
 
-            for pca_dim in tqdm([None, 2, 4], desc="PCA", leave=False):
+            for pca_dim in tqdm([2, 4], desc="PCA", leave=False):
 
                 for adversarial_noise in [0, 0.1, 0.2, 0.3]:
                     results = [0 for _ in range(4)]
