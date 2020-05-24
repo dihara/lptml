@@ -36,7 +36,7 @@ rand_vector_r = []
 identity_d = []
 
 
-def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
+def learn_metric(S, D, val_S, val_D, u, l, iterations, fixed_p=None, initial_solution=[]):
     """Learn a Mahalanobis metric
 
     Parameters
@@ -79,7 +79,7 @@ def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
         # print("using initial solution:", initial_solution)
         best_A = initial_solution
 
-    viol_d, viol_s = count_violated_constraints_SD(S, D, transformer(best_A), u, l)
+    viol_d, viol_s = count_violated_constraints_SD(val_S, val_D, transformer(best_A), u, l)
     print("##Initial violated constraints: d ", viol_d, "s", viol_s)
     print("t =", iterations)
     max_best_solution_d = viol_d
@@ -112,9 +112,10 @@ def learn_metric(S, D, u, l, iterations, fixed_p=None, initial_solution=[]):
             continue
 
         #Count the number of constraints of L that the solution violates
-        violated_constraints_d, violated_constraints_s = count_violated_constraints_SD(S, D, transformer(A), u, l)
+        violated_constraints_d, violated_constraints_s = count_violated_constraints_SD(val_S, val_D, transformer(A), u, l)
 
         if (max_best_solution_s + max_best_solution_d) > (violated_constraints_d + violated_constraints_s):
+            print('improved by', max_best_solution_s + max_best_solution_d - (violated_constraints_d + violated_constraints_s))
             best_A = A
             max_best_solution_d = violated_constraints_d
             max_best_solution_s = violated_constraints_s
@@ -415,6 +416,7 @@ def semidefsolver(H, u, l):
         problem.solve(solver=MOSEK, mosek_params={mosek.iparam.num_threads: 8})
     except Exception as e:
         return []
+        
 
     if problem.status != "optimal":
         if problem.status != "optimal_inaccurate":
@@ -565,6 +567,7 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
         Distance matrix
     """
 
+    global limit_constraints
     # how many data points are there?
     n = len(x)
     # get the number of features from the first data point
@@ -575,7 +578,10 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
 
     similar_pairs_S = []
     dissimilar_pairs_D = []
-
+    val_S = []
+    val_D = []
+    
+    
     print(n, " # of points")
     if (len(S) + len(D)) > 0:
         for i in range(len(S)):
@@ -584,33 +590,68 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
         for i in range(len(D)):
             dissimilar_pairs_D.append([x[D[i][0]], x[D[i][1]]])
     else:
+        # count classes
+        unique_classes = np.unique(y)
+        
+        # C:number of classes, c:points per class,  S = C*|c|*(|c|-1)    D = c*n*(n-c)
+        train_count = 40
+        validation_count = 30
+        
+        train_count_per_class = [train_count for x in range(len(unique_classes))]
+        val_count_per_class = [validation_count for x in range(len(unique_classes))]
+
+        #print(train_count_per_class)
+        #print(val_count_per_class)  
+
+        train_indices = []
+        val_indices = []    
+        # sample points for each class
+        for i in np.random.permutation(range(len(x))):
+            c = np.where(unique_classes==y[i])[0][0]
+            #print(y[i], 'vs', unique_classes, '=', c)
+            if train_count_per_class[c] > 0:
+                train_count_per_class[c] -= 1
+                train_indices.append(i)
+            elif val_count_per_class[c] > 0:
+                val_count_per_class[c] -= 1
+                val_indices.append(i)
+        
+        #print(train_indices)
+        #print(val_indices)  
+        
+        # convert to s, d sets for 
         all_pairs = []
-        for pair_of_indexes in itertools.combinations(range(0, len(x)), 2):
+        for pair_of_indexes in itertools.combinations(train_indices, 2):
             all_pairs.append(pair_of_indexes)
+
+        all_val_pairs = []
+        for pair_of_indexes in itertools.combinations(val_indices, 2):
+            all_val_pairs.append(pair_of_indexes)
 
         #get the number of features from the first data point
         d = len(x[0])
 
-        randomized_indexes = range(0, len(all_pairs))
-        #print("I have", len(randomized_indexes), "constraints")
+        print("I have", len(all_pairs), "training constraints and ", len(all_val_pairs), "validation constraints")
 
         if run_hadoop:
             data = []
             #print("I have", len(randomized_indexes), "lines of data")
-            for i in randomized_indexes:
+            for i in range(len(all_pairs)):
                 if y[all_pairs[i][0]] == y[all_pairs[i][1]]:
                     data.append([x[all_pairs[i][0]].tolist(), x[all_pairs[i][1]].tolist(), 'S'])
                 else:
                     data.append([x[all_pairs[i][0]].tolist(), x[all_pairs[i][1]].tolist(), 'D'])
         else:
-            for i in randomized_indexes:
+            for i in range(len(all_pairs)):
                 if y[all_pairs[i][0]] == y[all_pairs[i][1]]:
                     similar_pairs_S.append([x[all_pairs[i][0]], x[all_pairs[i][1]]])
                 else:
                     dissimilar_pairs_D.append([x[all_pairs[i][0]], x[all_pairs[i][1]]])
-
-                if (len(similar_pairs_S) > limit_constraints) and (len(dissimilar_pairs_D) > limit_constraints):
-                    break
+            for i in range(len(all_val_pairs)):
+                if y[all_val_pairs[i][0]] == y[all_val_pairs[i][1]]:
+                    val_S.append([x[all_val_pairs[i][0]], x[all_val_pairs[i][1]]])
+                else:
+                    val_D.append([x[all_val_pairs[i][0]], x[all_val_pairs[i][1]]])
 
     print("number of constraints: d = ", len(dissimilar_pairs_D),  " s = ", len(similar_pairs_S))
 
@@ -618,7 +659,7 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
     if run_hadoop:
         A = mp_learn_metric(data, u, l, t, num_machines)
     else:
-        A = learn_metric(similar_pairs_S, dissimilar_pairs_D, u, l, t, initial_solution=initial_solution);
+        A = learn_metric(similar_pairs_S, dissimilar_pairs_D, val_S, val_D, u, l, t, initial_solution=initial_solution);
 
     try:
         #Maybe I found no solution
