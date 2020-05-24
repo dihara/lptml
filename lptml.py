@@ -416,7 +416,7 @@ def semidefsolver(H, u, l):
         problem.solve(solver=MOSEK, mosek_params={mosek.iparam.num_threads: 8})
     except Exception as e:
         return []
-        
+
 
     if problem.status != "optimal":
         if problem.status != "optimal_inaccurate":
@@ -580,8 +580,8 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
     dissimilar_pairs_D = []
     val_S = []
     val_D = []
-    
-    
+
+
     print(n, " # of points")
     if (len(S) + len(D)) > 0:
         for i in range(len(S)):
@@ -592,19 +592,19 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
     else:
         # count classes
         unique_classes = np.unique(y)
-        
+
         # C:number of classes, c:points per class,  S = C*|c|*(|c|-1)    D = c*n*(n-c)
         train_count = 40
         validation_count = 30
-        
+
         train_count_per_class = [train_count for x in range(len(unique_classes))]
         val_count_per_class = [validation_count for x in range(len(unique_classes))]
 
         #print(train_count_per_class)
-        #print(val_count_per_class)  
+        #print(val_count_per_class)
 
         train_indices = []
-        val_indices = []    
+        val_indices = []
         # sample points for each class
         for i in np.random.permutation(range(len(x))):
             c = np.where(unique_classes==y[i])[0][0]
@@ -615,10 +615,10 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
             elif val_count_per_class[c] > 0:
                 val_count_per_class[c] -= 1
                 val_indices.append(i)
-        
+
         #print(train_indices)
-        #print(val_indices)  
-        
+        #print(val_indices)
+
         # convert to s, d sets for 
         all_pairs = []
         for pair_of_indexes in itertools.combinations(train_indices, 2):
@@ -652,6 +652,10 @@ def fit(x, y, u, l, t, S=[], D=[], run_hadoop=False, num_machines=2, initial_sol
                     val_S.append([x[all_val_pairs[i][0]], x[all_val_pairs[i][1]]])
                 else:
                     val_D.append([x[all_val_pairs[i][0]], x[all_val_pairs[i][1]]])
+
+            if len(all_val_pairs) == 0:
+                val_S = similar_pairs_S.copy()
+                val_D = dissimilar_pairs_D.copy()
 
     print("number of constraints: d = ", len(dissimilar_pairs_D),  " s = ", len(similar_pairs_S))
 
