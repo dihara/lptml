@@ -3,6 +3,7 @@ import pandas as pd
 from string import ascii_uppercase
 from struct import unpack
 from tqdm import tqdm
+from sklearn import datasets
 
 
 def readInt32(num):
@@ -73,6 +74,11 @@ def read_image_segment(path):
     return x.to_numpy(), y.to_numpy()
 
 
+def read_iris():
+    iris = datasets.load_iris()
+    return iris.data, iris.target
+
+
 def read_isolet(path):
     df = pd.read_csv(path)
     attributes = [f"f{i}" for i in range(1, 618)]
@@ -110,7 +116,28 @@ def read_vehicle(path):
     return x.to_numpy(), y.to_numpy()
 
 
+def read_wine():
+    wine = datasets.load_wine()
+    return wine.data, wine.target
+
+
+def read_soybean(path):
+    df = pd.read_csv(path, header=None)
+    x = df.loc[:, df.columns != 0]
+    y = df[0]
+    return x.to_numpy(), y.to_numpy()
+
 def load_datasets():
+
+    x_soybean, y_soybean = read_iris()
+    yield x_soybean, y_soybean, "soybean"
+
+    x_iris, y_iris = read_iris()
+    yield x_iris, y_iris, "iris"
+
+    x_wine, y_wine = read_wine()
+    yield x_wine, y_wine, "wine"
+
     # loaded_datasets = []
     # Breast cancer dataset
     x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
@@ -127,7 +154,7 @@ def load_datasets():
 
     # Image segment dataset
     x_is, y_is = read_image_segment(
-        "./datasets/image_segment/segmentation.data")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+        "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
     yield x_is, y_is, "image_segment"
 
     # Isolet dataset

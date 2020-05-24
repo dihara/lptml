@@ -19,7 +19,7 @@ if __name__ == "__main__":
     #         "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets", total=7):
-        if dataset_name not in ["mnist", "letters"]:
+        if dataset_name not in ["iris", "wine", "soybean"]:
             continue
         for MLConstructor in tqdm([RCA_Supervised, MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN], desc=f"Metric Learning Constructor", leave=False):
 

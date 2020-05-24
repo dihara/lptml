@@ -120,9 +120,7 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
 
                 elapsed_time = time() - start_time
                 print("elapsed time to get G", elapsed_time, "s")
-                # x_lptml = np.matmul(G, x.T).T
-                # print("what I got back was of type", type(G))
-                # x_lptml_train, x_lptml_test = x_lptml[train_index], x_lptml[test_index]
+
                 try:
                     x_lptml_train = np.matmul(G, np.transpose(x_pca_train)).T
                     x_lptml_test = np.matmul(G, np.transpose(x_pca_test)).T
@@ -181,7 +179,7 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             # final_results = ["", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             #                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-            final_results = [0 for _ in range(8)]  # first 4 for average, last 4 for std
+            final_results = [0 for _ in range(16)]  # first 4 for average, last 4 for std
 
             results = np.array(results_dict[str(pca)][str(ite)])
             #
@@ -214,12 +212,40 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             # Std F1 score for LPTML
             final_results[7] = np.round(np.std(results[:, 13]), 3)
 
-            final_results_string = ",".join([str(el) for el in final_results])
+
+            # Averages accuracy for Euclidean
+            final_results[8] = np.round(np.average(results[:, 0]), 3)
+
+            # Averages precision for LPTML
+            final_results[9] = np.round(np.average(results[:, 4]), 3)
+
+            # Averages recall for LPTML
+            final_results[10] = np.round(np.average(results[:, 8]), 3)
+
+            # Averages F1 score for LPTML
+            final_results[11] = np.round(np.average(results[:, 12]), 3)
+
+            # Std accuracy for LPTML
+            final_results[12] = np.round(np.std(results[:, 0]), 3)
+
+            # Std precision for LPTML
+            final_results[13] = np.round(np.std(results[:, 4]), 3)
+
+            # Std recall for LPTML
+            final_results[14] = np.round(np.std(results[:, 8]), 3)
+
+            # Std F1 score for LPTML
+            final_results[15] = np.round(np.std(results[:, 12]), 3)
+
+            final_results_string = ",".join([str(el) for el in final_results[:8]])
+            final_results_string_euclidean = ",".join([str(el) for el in final_results[8:]])
 
             final_results_additional_info = f"LPTML,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
+            final_results_additional_info_euclidean = f"EUCLIDEAN,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
 
             with open("reformatted_results.csv", "a+") as f:
                 f.write(final_results_additional_info + final_results_string + "\n")
+                f.write(final_results_additional_info_euclidean + final_results_string_euclidean + "\n")
 
             # Omit for now the count of violated constraints and training time
             # # Train initial  # violated
@@ -269,19 +295,19 @@ if __name__ == "__main__":
     #     f.write(header + "\n")
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets"):
-        if dataset_name in done_experiments:
-            continue
         PCA_dim_by = [x.shape[1] - 2, x.shape[1] - 4]
 
         # Figure 3
         for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
-            if noise_fraction != 0:
-                continue
             random_seed = np.random.random_integers(1000)
 
             result_header = str(noise_fraction) + f"% noise {dataset_name}"
             print(f"\n\tHeader -> {result_header}")
             feat_count = x.shape[1]
-            perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
-                               filename, lptml_iterations, [],
-                               [], 0, 0, dataset_name, label_noise=noise_fraction, rand_state=random_seed)
+            try:
+                perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
+                                   filename, lptml_iterations, [],
+                                   [], 0, 0, dataset_name, label_noise=noise_fraction, rand_state=random_seed)
+
+            except:
+                continue
