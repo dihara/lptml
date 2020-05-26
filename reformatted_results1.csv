@@ -1,0 +1,5 @@
+algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,avg_accuracy,avg_precision,avg_recall,avg_f1,std_accuracy,std_precision,std_recall,std_f1
+LPTML,image_segment,(2100|19|7),19,0,0.909,0.909,0.908,0.908,0.02,0.019,0.021,0.02
+EUCLIDEAN,image_segment,(2100|19|7),19,0,0.914,0.916,0.915,0.914,0.005,0.006,0.006,0.006
+LPTML,image_segment,(2100|19|7),19,0.1,0.888,0.889,0.888,0.888,0.022,0.021,0.021,0.021
+EUCLIDEAN,image_segment,(2100|19|7),19,0.1,0.907,0.907,0.906,0.905,0.006,0.005,0.005,0.005

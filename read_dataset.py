@@ -129,16 +129,23 @@ def read_soybean(path):
 
 def load_datasets():
 
+    # Image segment dataset
+    x_is, y_is = read_image_segment(
+        "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+    yield x_is, y_is, "image_segment"
+
+    # Soybean dataset
     x_soybean, y_soybean = read_iris()
     yield x_soybean, y_soybean, "soybean"
 
+    # Iris dataset
     x_iris, y_iris = read_iris()
     yield x_iris, y_iris, "iris"
 
+    # Wine dataset
     x_wine, y_wine = read_wine()
     yield x_wine, y_wine, "wine"
 
-    # loaded_datasets = []
     # Breast cancer dataset
     x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
     yield x_bc, y_bc, "breast_cancer"
@@ -151,11 +158,6 @@ def load_datasets():
     x_gc, y_gc = read_german_credit(
         "./datasets/german_credit/german_credit.tsv")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
     yield x_gc, y_gc, "german_credit"
-
-    # Image segment dataset
-    x_is, y_is = read_image_segment(
-        "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-    yield x_is, y_is, "image_segment"
 
     # Isolet dataset
     x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")

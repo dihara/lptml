@@ -140,6 +140,9 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
                 iteration_results[0] = accuracy_score(y_test, y_prediction)
                 iteration_results[1] = accuracy_score(y_test, y_lptml_prediction)
 
+                print(f"euclidean accuracy = {iteration_results[0]}")
+                print(f"LPTML accuracy = {iteration_results[1]}")
+
                 iteration_results[4] = precision_score(y_test, y_prediction, average="macro")
                 iteration_results[5] = precision_score(y_test, y_lptml_prediction, average="macro")
 
@@ -160,7 +163,7 @@ def split_pca_learn_metric(x, y, PCA_dim_by, repetitions, t_size, lptml_iteratio
                 iteration_results[19] = d_viol + s_viol
 
                 iteration_results[20] = elapsed_time
-
+                print("PRINTING ITERATIONS")
                 print(iteration_results)
                 experiment_results[str(reduce_dim_by)][str(target_iteration)].append(iteration_results)
 
@@ -216,25 +219,25 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             # Averages accuracy for Euclidean
             final_results[8] = np.round(np.average(results[:, 0]), 3)
 
-            # Averages precision for LPTML
+            # Averages precision for Euclidean
             final_results[9] = np.round(np.average(results[:, 4]), 3)
 
-            # Averages recall for LPTML
+            # Averages recall for Euclidean
             final_results[10] = np.round(np.average(results[:, 8]), 3)
 
-            # Averages F1 score for LPTML
+            # Averages F1 score for Euclidean
             final_results[11] = np.round(np.average(results[:, 12]), 3)
 
-            # Std accuracy for LPTML
+            # Std accuracy for Euclidean
             final_results[12] = np.round(np.std(results[:, 0]), 3)
 
-            # Std precision for LPTML
+            # Std precision for Euclidean
             final_results[13] = np.round(np.std(results[:, 4]), 3)
 
-            # Std recall for LPTML
+            # Std recall for Euclidean
             final_results[14] = np.round(np.std(results[:, 8]), 3)
 
-            # Std F1 score for LPTML
+            # Std F1 score for Euclidean
             final_results[15] = np.round(np.std(results[:, 12]), 3)
 
             final_results_string = ",".join([str(el) for el in final_results[:8]])
@@ -247,56 +250,30 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
                 f.write(final_results_additional_info + final_results_string + "\n")
                 f.write(final_results_additional_info_euclidean + final_results_string_euclidean + "\n")
 
-            # Omit for now the count of violated constraints and training time
-            # # Train initial  # violated
-            # final_results[17] = np.round(np.average(results[:, 16]), 3)
-            # final_results[18] = np.round(np.std(results[:, 16]), 3)
-            #
-            # # Train final  # violated
-            # final_results[19] = np.round(np.average(results[:, 17]), 3)
-            # final_results[20] = np.round(np.std(results[:, 17]), 3)
-            #
-            # # Test initial  # violated
-            # final_results[21] = np.round(np.average(results[:, 18]), 3)
-            # final_results[22] = np.round(np.std(results[:, 18]), 3)
-            #
-            # # Test final  # violated
-            # final_results[23] = np.round(np.average(results[:, 19]), 3)
-            # final_results[24] = np.round(np.std(results[:, 19]), 3)
-            #
-            # # Training time
-            # final_results[25] = np.round(np.average(results[:, 20]), 3)
-            # final_results[26] = np.round(np.std(results[:, 20]), 3)
-
-            # with open( "k=5" + filename, 'a+', newline='') as resultsfile:
-            #     print("Printing final results!")
-            #     print(final_results)
-            #     wr = csv.writer(resultsfile, quoting=csv.QUOTE_ALL)
-            #     wr.writerow(final_results)
-
 
 if __name__ == "__main__":
     loaded_datasets = []
-    # BEGIN EXPERIMENT LIST
+
     # Parameters for all experiments
     run_mlwga = True
-    filename = 'demo-results.csv'
-    train_size = 0.5
+    filename = 'old_results/demo-results.csv'
+    train_size = 0.8
 
     # Results presented in Figure 1
     # Average time as dimensionality increases
 
-    lptml_iterations = [1]
+    lptml_iterations = [20]
     repeat_experiment = 5
 
     header = "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,avg_accuracy,avg_precision,avg_recall,avg_f1,std_accuracy,std_precision,std_recall,std_f1"
 
-    # with open("reformatted_results.csv", "w+") as f:
-    #     f.write(header + "\n")
+    with open("reformatted_results.csv", "w+") as f:
+        f.write(header + "\n")
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets"):
-        PCA_dim_by = [x.shape[1] - 2, x.shape[1] - 4]
-
+        PCA_dim_by = [0]
+        if dataset_name in ["isolet", "letters", "mnist"]:
+            PCA_dim_by = [x.shape[1] - 10]
         # Figure 3
         for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
             random_seed = np.random.random_integers(1000)
@@ -308,6 +285,5 @@ if __name__ == "__main__":
                 perform_experiment(x, y, train_size, feat_count, PCA_dim_by, repeat_experiment, result_header,
                                    filename, lptml_iterations, [],
                                    [], 0, 0, dataset_name, label_noise=noise_fraction, rand_state=random_seed)
-
             except:
                 continue
