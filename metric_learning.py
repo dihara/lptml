@@ -1,6 +1,6 @@
 from read_dataset import load_datasets
 from tqdm import tqdm
-from metric_learn import LMNN, ITML_Supervised, LFDA, MLKR, NCA, RCA_Supervised, MMC_Supervised, LSML_Supervised,
+from metric_learn import LMNN, ITML_Supervised, LFDA, MLKR, NCA, RCA_Supervised, MMC_Supervised, LSML_Supervised
 from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
@@ -13,21 +13,25 @@ from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
 
-    # with open("results-other.csv", "w+") as f:
+    # with open("OTHER_ALGO_results.csv", "w+") as f:
     #     f.write(
     #         "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
 
-    for _ in tqdm(range(5), desc="Run n: ", total=5):
+    for _ in tqdm(range(50), desc="Run n: ", total=50):
         try:
             for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets", total=7):
+
+
                 for MLConstructor in tqdm(
-                        [RCA_Supervised, MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN],
+                        [MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN],
                         desc=f"Metric Learning Constructor", leave=False):
 
                     for pca_dim in tqdm([0], desc="PCA", leave=False):
+
                         if dataset_name in ["isolet", "letters", "mnist"]:
                             pca_dim = 10
-                        for adversarial_noise in [0, 0.1, 0.2, 0.3]:
+
+                        for adversarial_noise in [0]:
                             results = [0 for _ in range(4)]
 
                             try:
@@ -37,7 +41,7 @@ if __name__ == "__main__":
                                 else:
                                     x_pca = x.copy()
 
-                                x_train, x_test, y_train, y_test = train_test_split(x_pca, y, test_size=0.5)
+                                x_train, x_test, y_train, y_test = train_test_split(x_pca, y, test_size=0.8)
 
                                 try:
                                     ml_algo = MLConstructor(max_iter=100)
@@ -66,9 +70,10 @@ if __name__ == "__main__":
                                 results[3] = f1_score(y_test, y_ml_prediction, average="macro")
 
                             except ValueError as e:
+                                print(e)
                                 continue
 
-                            with open("results-other.csv", "a+") as f:
+                            with open("OTHER_ALGO_results.csv", "a+") as f:
                                 results_string = f"{MLConstructor.__name__},{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])})," + f"{pca_dim}," + f"{adversarial_noise}," + ','.join(
                                     [str(el) for el in results]) + "\n"
                                 f.write(results_string)

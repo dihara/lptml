@@ -4,7 +4,9 @@ from string import ascii_uppercase
 from struct import unpack
 from tqdm import tqdm
 from sklearn import datasets
+from scipy.io import loadmat
 
+RUN_ALL_EXPERIMENTS = False
 
 def readInt32(num):
     return unpack(">I", num)[0]
@@ -127,12 +129,32 @@ def read_soybean(path):
     y = df[0]
     return x.to_numpy(), y.to_numpy()
 
+
+def read_ionosphere(path):
+    df = pd.read_csv(path, header=None)
+    x = df.loc[:, df.columns != 34].fillna(0)
+    y = df[34]
+    return x.to_numpy(), y.to_numpy()
+
+
+def read_poisoned_synth(x_path, y_path):
+    x = loadmat(x_path)
+    y = loadmat(y_path)
+    return x["XXX"].T, y["YYY"].T.reshape((106,))
+
+
+def read_synth(x_path, y_path):
+    # Remove the last 5 points (the poisoned points)
+    x, y = read_poisoned_synth(x_path, y_path)
+    return x[:100, :], y[:100]
+
+
 def load_datasets():
 
-    # Image segment dataset
-    x_is, y_is = read_image_segment(
-        "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-    yield x_is, y_is, "image_segment"
+    # Synthetic dataset
+    x_synth, y_synth = read_synth("./datasets/poisoned_synthetic/xt_lm.mat",
+                                           "./datasets/poisoned_synthetic/y_lm.mat")
+    yield x_synth, y_synth, "synthetic"
 
     # Soybean dataset
     x_soybean, y_soybean = read_iris()
@@ -142,34 +164,47 @@ def load_datasets():
     x_iris, y_iris = read_iris()
     yield x_iris, y_iris, "iris"
 
+    # Poisoned Synthetic dataset
+    x_synth, y_synth = read_poisoned_synth("./datasets/poisoned_synthetic/xt_lm.mat", "./datasets/poisoned_synthetic/y_lm.mat")
+    yield x_synth, y_synth, "poisoned_synthetic"
+
     # Wine dataset
     x_wine, y_wine = read_wine()
     yield x_wine, y_wine, "wine"
 
-    # Breast cancer dataset
-    x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
-    yield x_bc, y_bc, "breast_cancer"
+    # Ionosphere dataset
+    x_ionosphere, y_ionosphere = read_ionosphere("./datasets/ionosphere/ionosphere.csv")
+    yield x_ionosphere, y_ionosphere, "ionosphere"
 
-    # Vehicle dataset
-    x_vehicle, y_vehicle = read_vehicle("./datasets/vehicle/xa.csv")
-    yield x_vehicle, y_vehicle, "vehicle"
+    if RUN_ALL_EXPERIMENTS:
+        # Image segment dataset
+        x_is, y_is = read_image_segment(
+            "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+        yield x_is, y_is, "image_segment"
 
-    # German Credit dataset
-    x_gc, y_gc = read_german_credit(
-        "./datasets/german_credit/german_credit.tsv")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-    yield x_gc, y_gc, "german_credit"
+        # Breast cancer dataset
+        x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
+        yield x_bc, y_bc, "breast_cancer"
 
-    # Isolet dataset
-    x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")
-    yield x_isolet, y_isolet, "isolet"
+        # Vehicle dataset
+        x_vehicle, y_vehicle = read_vehicle("./datasets/vehicle/xa.csv")
+        yield x_vehicle, y_vehicle, "vehicle"
 
-    # Letters dataset
-    x_letters, y_letters = read_letters("./datasets/letters/letters.csv")
-    yield x_letters, y_letters, "letters"
+        # German Credit dataset
+        x_gc, y_gc = read_german_credit(
+            "./datasets/german_credit/german_credit.tsv")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+        yield x_gc, y_gc, "german_credit"
 
-    # MNIST dataset
-    x_mnist, y_mnist = read_mnist("./datasets/mnist/t10k-images-idx3-ubyte", "./datasets/mnist/t10k-labels-idx1-ubyte")
-    yield x_mnist, y_mnist, "mnist"
+        # Isolet dataset
+        x_isolet, y_isolet = read_isolet("./datasets/isolet/isolet_csv.csv")
+        yield x_isolet, y_isolet, "isolet"
 
-    #return loaded_datasets
+        # Letters dataset
+        x_letters, y_letters = read_letters("./datasets/letters/letters.csv")
+        yield x_letters, y_letters, "letters"
+
+        # MNIST dataset
+        x_mnist, y_mnist = read_mnist("./datasets/mnist/t10k-images-idx3-ubyte",
+                                      "./datasets/mnist/t10k-labels-idx1-ubyte")
+        yield x_mnist, y_mnist, "mnist"
 

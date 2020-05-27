@@ -246,7 +246,7 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             final_results_additional_info = f"LPTML,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
             final_results_additional_info_euclidean = f"EUCLIDEAN,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
 
-            with open("reformatted_results.csv", "a+") as f:
+            with open("LPTML_results2000it.csv", "a+") as f:
                 f.write(final_results_additional_info + final_results_string + "\n")
                 f.write(final_results_additional_info_euclidean + final_results_string_euclidean + "\n")
 
@@ -262,20 +262,23 @@ if __name__ == "__main__":
     # Results presented in Figure 1
     # Average time as dimensionality increases
 
-    lptml_iterations = [20]
-    repeat_experiment = 5
+    lptml_iterations = [2000]
+    repeat_experiment = 2
 
     header = "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,avg_accuracy,avg_precision,avg_recall,avg_f1,std_accuracy,std_precision,std_recall,std_f1"
 
-    with open("reformatted_results.csv", "w+") as f:
-        f.write(header + "\n")
+    # with open("LPTML_results2000it.csv", "w+") as f:
+    #     f.write(header + "\n")
 
     for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets"):
         PCA_dim_by = [0]
         if dataset_name in ["isolet", "letters", "mnist"]:
             PCA_dim_by = [x.shape[1] - 10]
+
+        if dataset_name not in ["wine", "ionosphere"]:
+            continue
         # Figure 3
-        for noise_fraction in tqdm([0, 0.1, 0.2, 0.3], desc=f"[{dataset_name}] Noise fraction"):
+        for noise_fraction in tqdm([0], desc=f"[{dataset_name}] Noise fraction"):
             random_seed = np.random.random_integers(1000)
 
             result_header = str(noise_fraction) + f"% noise {dataset_name}"
