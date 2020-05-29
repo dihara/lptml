@@ -1,4 +1,4 @@
-from read_dataset import load_datasets
+from read_dataset import load_datasets, load_poisoned
 from tqdm import tqdm
 from metric_learn import LMNN, ITML_Supervised, LFDA, MLKR, NCA, RCA_Supervised, MMC_Supervised, LSML_Supervised
 from sklearn.model_selection import train_test_split
@@ -13,14 +13,13 @@ from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
 
-    # with open("OTHER_ALGO_results.csv", "w+") as f:
+    # with open("OTHER_ALGO_results_final.csv", "w+") as f:
     #     f.write(
     #         "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
 
-    for _ in tqdm(range(50), desc="Run n: ", total=50):
+    for _ in tqdm(range(50), desc="Run n: ", total=10):
         try:
-            for x, y, dataset_name in tqdm(load_datasets(), desc="Datasets", total=7):
-
+            for x, y, dataset_name in tqdm(load_poisoned(), desc="Datasets", total=4):
 
                 for MLConstructor in tqdm(
                         [MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN],
@@ -28,20 +27,21 @@ if __name__ == "__main__":
 
                     for pca_dim in tqdm([0], desc="PCA", leave=False):
 
-                        if dataset_name in ["isolet", "letters", "mnist"]:
-                            pca_dim = 10
-
                         for adversarial_noise in [0]:
                             results = [0 for _ in range(4)]
 
                             try:
+
+                                if x.shape[1]>4:
+                                    #print(f"{dataset_name} DETECTED -> Applying PCA")
+                                    pca_dim = 4
 
                                 if pca_dim:
                                     x_pca = PCA(n_components=pca_dim).fit_transform(x)
                                 else:
                                     x_pca = x.copy()
 
-                                x_train, x_test, y_train, y_test = train_test_split(x_pca, y, test_size=0.8)
+                                x_train, x_test, y_train, y_test = train_test_split(x_pca, y, test_size=0.5)
 
                                 try:
                                     ml_algo = MLConstructor(max_iter=100)
@@ -56,7 +56,6 @@ if __name__ == "__main__":
                                     for no_noise, yes_noise in nss.split(y_train):
                                         for i in yes_noise:
                                             y_train[i] = np.random.choice(np.setdiff1d(all_labels, y_train[i]), 1)
-
                                 G = ml_algo.fit(x_train, y_train).get_mahalanobis_matrix()
                                 x_ml_train = np.matmul(G, np.transpose(x_train)).T
                                 x_ml_test = np.matmul(G, np.transpose(x_test)).T
@@ -73,7 +72,7 @@ if __name__ == "__main__":
                                 print(e)
                                 continue
 
-                            with open("OTHER_ALGO_results.csv", "a+") as f:
+                            with open("OTHER_ALGO_results_final.csv", "a+") as f:
                                 results_string = f"{MLConstructor.__name__},{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])})," + f"{pca_dim}," + f"{adversarial_noise}," + ','.join(
                                     [str(el) for el in results]) + "\n"
                                 f.write(results_string)

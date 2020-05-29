@@ -5,8 +5,9 @@ from struct import unpack
 from tqdm import tqdm
 from sklearn import datasets
 from scipy.io import loadmat
-
-RUN_ALL_EXPERIMENTS = False
+import IPython
+import os
+RUN_ALL_EXPERIMENTS = True
 
 def readInt32(num):
     return unpack(">I", num)[0]
@@ -76,9 +77,13 @@ def read_image_segment(path):
     return x.to_numpy(), y.to_numpy()
 
 
-def read_iris():
-    iris = datasets.load_iris()
-    return iris.data, iris.target
+def read_iris(poisoned=False):
+    if poisoned:
+        df = pd.read_csv("./datasets/poisoned/iris_poisoned.csv", header=None)
+        return df.loc[:, df.columns != 4].to_numpy(), df[4].to_numpy()
+    else:
+        iris = datasets.load_iris()
+        return iris.data, iris.target
 
 
 def read_isolet(path):
@@ -100,6 +105,7 @@ def read_mnist(x_path, y_path):
     x = read_x_mnist(x_path).reshape((10000, 784))
     y = read_y_mnist(y_path)
     return x[:4000, :], y[:4000]
+
 
 def read_breast_cancer(path):
     df = pd.read_csv(path)
@@ -124,9 +130,11 @@ def read_wine():
 
 
 def read_soybean(path):
-    df = pd.read_csv(path, header=None)
+    df = pd.read_csv(path, header=None).interpolate(method="linear")
     x = df.loc[:, df.columns != 0]
     y = df[0]
+    labels_map = dict([(l,i) for i,l in enumerate(y.unique())])
+    y = y.apply(lambda x: labels_map[x])
     return x.to_numpy(), y.to_numpy()
 
 
@@ -149,38 +157,56 @@ def read_synth(x_path, y_path):
     return x[:100, :], y[:100]
 
 
+def load_poisoned():
+    # #yield (*read_iris(poisoned=True), "poisoned_iris")
+    # yield (*read_soybean('./datasets/poisoned/soybean_poisoned.csv'), "poisoned_soybean")
+    # # yield (*read_poisoned_synth("./datasets/poisoned_synthetic/xt_lm.mat","./datasets/poisoned_synthetic/y_lm.mat"), "poisoned_synth")
+    # # yield (*read_ionosphere('./datasets/poisoned/ionosphere_poisoned.csv'), "poisoned_ionosphere")
+
+    for dataset_name in os.listdir("./datasets/fully_random_poisoned"):
+
+        if dataset_name in ["wine_poisoned.csv", "ionosphere_poisoned.csv", "iris_poisoned.csv", "synthetic_poisoned.csv"]:
+            continue
+
+        path = f"./datasets/fully_random_poisoned/{dataset_name}"
+
+        df = pd.read_csv(path, header=None)
+        class_idx = len(df.columns) - 1
+
+        x = df.loc[:, df.columns != class_idx]
+        y = df[class_idx]
+        yield x.to_numpy(), y.to_numpy(), dataset_name.split(".")[0]
+
+
+
 def load_datasets():
-
-    # Synthetic dataset
-    x_synth, y_synth = read_synth("./datasets/poisoned_synthetic/xt_lm.mat",
-                                           "./datasets/poisoned_synthetic/y_lm.mat")
-    yield x_synth, y_synth, "synthetic"
-
-    # Soybean dataset
-    x_soybean, y_soybean = read_iris()
-    yield x_soybean, y_soybean, "soybean"
-
-    # Iris dataset
-    x_iris, y_iris = read_iris()
-    yield x_iris, y_iris, "iris"
-
-    # Poisoned Synthetic dataset
-    x_synth, y_synth = read_poisoned_synth("./datasets/poisoned_synthetic/xt_lm.mat", "./datasets/poisoned_synthetic/y_lm.mat")
-    yield x_synth, y_synth, "poisoned_synthetic"
-
-    # Wine dataset
-    x_wine, y_wine = read_wine()
-    yield x_wine, y_wine, "wine"
-
-    # Ionosphere dataset
-    x_ionosphere, y_ionosphere = read_ionosphere("./datasets/ionosphere/ionosphere.csv")
-    yield x_ionosphere, y_ionosphere, "ionosphere"
+    #
+    # #Synthetic dataset
+    # x_synth, y_synth = read_synth("./datasets/poisoned_synthetic/xt_lm.mat",
+    #                                        "./datasets/poisoned_synthetic/y_lm.mat")
+    # yield x_synth, y_synth, "synthetic"
+    #
+    # # Soybean dataset
+    # x_soybean, y_soybean = read_soybean("datasets/soybean/soybean-large.csv")
+    # yield x_soybean, y_soybean, "soybean_real"
+    #
+    # # Iris dataset
+    # x_iris, y_iris = read_iris()
+    # yield x_iris, y_iris, "iris"
+    #
+    # # Wine dataset
+    # x_wine, y_wine = read_wine()
+    # yield x_wine, y_wine, "wine"
+    #
+    # # Ionosphere dataset
+    # x_ionosphere, y_ionosphere = read_ionosphere("./datasets/ionosphere/ionosphere.csv")
+    # yield x_ionosphere, y_ionosphere, "ionosphere"
 
     if RUN_ALL_EXPERIMENTS:
         # Image segment dataset
         x_is, y_is = read_image_segment(
             "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-        yield x_is, y_is, "image_segment"
+        yield x_is, y_is, "poisoned_image_segment"
 
         # Breast cancer dataset
         x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
