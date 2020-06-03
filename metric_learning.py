@@ -13,14 +13,13 @@ from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
 
-    # with open("OTHER_ALGO_results_final.csv", "w+") as f:
+    # with open("new_poisoned_results.csv", "w+") as f:
     #     f.write(
     #         "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,accuracy,precision,recall,f1\n")
 
-    for _ in tqdm(range(50), desc="Run n: ", total=10):
+    for _ in tqdm(range(10), desc="Run n: ", total=10):
         try:
-            for x, y, dataset_name in tqdm(load_poisoned(), desc="Datasets", total=4):
-
+            for x, y, dataset_name in tqdm(load_poisoned(), desc="Datasets", total=7):
                 for MLConstructor in tqdm(
                         [MMC_Supervised, LSML_Supervised, ITML_Supervised, NCA, MLKR, LFDA, LMNN],
                         desc=f"Metric Learning Constructor", leave=False):
@@ -32,8 +31,7 @@ if __name__ == "__main__":
 
                             try:
 
-                                if x.shape[1]>4:
-                                    #print(f"{dataset_name} DETECTED -> Applying PCA")
+                                if x.shape[1] > 4:
                                     pca_dim = 4
 
                                 if pca_dim:
@@ -72,7 +70,7 @@ if __name__ == "__main__":
                                 print(e)
                                 continue
 
-                            with open("OTHER_ALGO_results_final.csv", "a+") as f:
+                            with open("new_poisoned_results.csv", "a+") as f:
                                 results_string = f"{MLConstructor.__name__},{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])})," + f"{pca_dim}," + f"{adversarial_noise}," + ','.join(
                                     [str(el) for el in results]) + "\n"
                                 f.write(results_string)

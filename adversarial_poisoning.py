@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from read_dataset import read_synth, read_iris, read_mnist, read_breast_cancer, read_wine, read_image_segment, \
     read_soybean, read_ionosphere, load_datasets
+from metric_learn import ITML_Supervised
 from sklearn.neighbors import KNeighborsClassifier
 from tqdm import tqdm
 import sys
@@ -209,7 +210,11 @@ if __name__ == "__main__":
                     new_x = np.append(x_pca, x_to_add, axis=0)
                     new_y = np.append(y, y_to_add, axis=0)
 
-                    new_accuracy = run_tests(new_x, new_y)
+                    itml = ITML_Supervised()
+                    G = itml.fit(new_x, new_y).get_mahalanobis_matrix()
+                    x_ml = np.matmul(G, np.transpose(new_x)).T
+
+                    new_accuracy = run_tests(x_ml, new_y)
                     delta = prev_accuracy - new_accuracy
 
                     if delta > 0:

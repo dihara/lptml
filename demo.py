@@ -243,7 +243,7 @@ def perform_experiment(x, y, number_of_folds, feat_count, PCA_dim_by, repeat_exp
             final_results_string = ",".join([str(el) for el in final_results[:8]])
             final_results_string_euclidean = ",".join([str(el) for el in final_results[8:]])
 
-            final_results_additional_info = f"LPTML,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
+            final_results_additional_info = f"LPTML2000,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
             final_results_additional_info_euclidean = f"EUCLIDEAN,{dataset_name},({'|'.join([str(el) for el in (*x.shape, len(np.unique(y)))])}),{x.shape[1] - pca},{label_noise},"
 
             with open("LPTML_results2000itfinal.csv", "a+") as f:
@@ -257,13 +257,13 @@ if __name__ == "__main__":
     # Parameters for all experiments
     run_mlwga = True
     filename = 'old_results/demo-results.csv'
-    train_size = 0.8
+    train_size = 0.5
 
     # Results presented in Figure 1
     # Average time as dimensionality increases
 
-    lptml_iterations = [1000]
-    repeat_experiment = 4
+    lptml_iterations = [2000]
+    repeat_experiment = 50
 
     header = "algorithm,dataset_name,dataset_dimensions(elements|features|classes),PCA,adversarial_noise,avg_accuracy,avg_precision,avg_recall,avg_f1,std_accuracy,std_precision,std_recall,std_f1"
 

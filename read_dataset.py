@@ -158,14 +158,10 @@ def read_synth(x_path, y_path):
 
 
 def load_poisoned():
-    # #yield (*read_iris(poisoned=True), "poisoned_iris")
-    # yield (*read_soybean('./datasets/poisoned/soybean_poisoned.csv'), "poisoned_soybean")
-    # # yield (*read_poisoned_synth("./datasets/poisoned_synthetic/xt_lm.mat","./datasets/poisoned_synthetic/y_lm.mat"), "poisoned_synth")
-    # # yield (*read_ionosphere('./datasets/poisoned/ionosphere_poisoned.csv'), "poisoned_ionosphere")
 
     for dataset_name in os.listdir("./datasets/fully_random_poisoned"):
 
-        if dataset_name in ["wine_poisoned.csv", "ionosphere_poisoned.csv", "iris_poisoned.csv", "synthetic_poisoned.csv"]:
+        if dataset_name in ["mnist_poisoned.csv", "isolet_poisoned.csv", "letters_poisoned.csv"]:
             continue
 
         path = f"./datasets/fully_random_poisoned/{dataset_name}"
@@ -178,35 +174,34 @@ def load_poisoned():
         yield x.to_numpy(), y.to_numpy(), dataset_name.split(".")[0]
 
 
-
 def load_datasets():
-    #
-    # #Synthetic dataset
-    # x_synth, y_synth = read_synth("./datasets/poisoned_synthetic/xt_lm.mat",
-    #                                        "./datasets/poisoned_synthetic/y_lm.mat")
-    # yield x_synth, y_synth, "synthetic"
-    #
-    # # Soybean dataset
-    # x_soybean, y_soybean = read_soybean("datasets/soybean/soybean-large.csv")
-    # yield x_soybean, y_soybean, "soybean_real"
-    #
-    # # Iris dataset
-    # x_iris, y_iris = read_iris()
-    # yield x_iris, y_iris, "iris"
-    #
-    # # Wine dataset
-    # x_wine, y_wine = read_wine()
-    # yield x_wine, y_wine, "wine"
-    #
-    # # Ionosphere dataset
-    # x_ionosphere, y_ionosphere = read_ionosphere("./datasets/ionosphere/ionosphere.csv")
-    # yield x_ionosphere, y_ionosphere, "ionosphere"
+
+    #Synthetic dataset
+    x_synth, y_synth = read_synth("./datasets/poisoned_synthetic/xt_lm.mat",
+                                           "./datasets/poisoned_synthetic/y_lm.mat")
+    yield x_synth, y_synth, "synthetic"
+
+    # Soybean dataset
+    x_soybean, y_soybean = read_soybean("datasets/soybean/soybean-large.csv")
+    yield x_soybean, y_soybean, "soybean_real"
+
+    # Iris dataset
+    x_iris, y_iris = read_iris()
+    yield x_iris, y_iris, "iris"
+
+    # Wine dataset
+    x_wine, y_wine = read_wine()
+    yield x_wine, y_wine, "wine"
+
+    # Ionosphere dataset
+    x_ionosphere, y_ionosphere = read_ionosphere("./datasets/ionosphere/ionosphere.csv")
+    yield x_ionosphere, y_ionosphere, "ionosphere"
 
     if RUN_ALL_EXPERIMENTS:
         # Image segment dataset
         x_is, y_is = read_image_segment(
-            "./datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
-        yield x_is, y_is, "poisoned_image_segment"
+            "datasets/image_segment/segmentation.test")  # pd.read_csv("./datasets/german_credit/german_credit.tsv", sep="\t")
+        yield x_is, y_is, "image_segment"
 
         # Breast cancer dataset
         x_bc, y_bc = read_breast_cancer("./datasets/breast_cancer/breast-cancer-wisconsin.data")
