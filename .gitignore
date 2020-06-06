@@ -1,3 +1,6 @@
 datasets/*
 .idea/
 __pycache__/
+*.csv
+results/*
+old_results
